@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import TaskCard from '../components/TaskCard';
 import { Link, useNavigate } from 'react-router-dom';
 
+const API = import.meta.env.VITE_API_BASE_URL;
+
 const Home = () => {
   const [tasks, setTasks] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -11,7 +13,7 @@ const Home = () => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const res = await fetch('/api/tasks');
+        const res = await fetch(`${API}/api/tasks`);
         const data = await res.json();
         setTasks(data);
       } catch (err) {
@@ -24,43 +26,66 @@ const Home = () => {
   }, []);
 
   const handleDelete = async (_id) => {
-    if (!_id) return console.error('Invalid taskId for deletion:', _id);
+    if (!_id) {
+      console.error('Invalid taskId for deletion:', _id);
+      return;
+    }
     try {
-      const res = await fetch(`/api/tasks/${_id}`, { method: 'DELETE' });
-      if (res.ok) setTasks(prev => prev.filter(t => t._id !== _id));
-      else console.error('Task delete failed:', await res.text());
+      const res = await fetch(`${API}/api/tasks/${_id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setTasks(prev => prev.filter(t => t._id !== _id));
+      } else {
+        console.error('Task delete failed:', await res.text());
+      }
     } catch (err) {
       console.error('Delete request failed:', err);
     }
   };
 
-  const filteredTasks = statusFilter === 'all' ? tasks : tasks.filter(task => task.status === statusFilter);
+  const filteredTasks =
+    statusFilter === 'all'
+      ? tasks
+      : tasks.filter(task => task.status === statusFilter);
 
   return (
     <div className="page">
-      <h1>Task Dashboard</h1>
-      <div className="filter-bar">
+      <h1 style={{ marginBottom: '0.5rem' }}>📝 Task Dashboard</h1>
+
+      <div className="filter-bar" style={{ marginBottom: '1rem' }}>
         <label>Status Filter:</label>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+        <select
+          value={statusFilter}
+          onChange={e => setStatusFilter(e.target.value)}
+        >
           <option value="all">All</option>
           <option value="todo">To Do</option>
           <option value="in_progress">In Progress</option>
           <option value="done">Done</option>
         </select>
       </div>
-      <Link  className="btn" to="/add">➕ Add Task</Link>
+
+      <Link className="btn" to="/add" style={{ marginBottom: '1.5rem', display: 'inline-block' }}>
+        ➕ Add Task
+      </Link>
+
       {loading ? (
-         <p className="loading-message">⏳ Loading tasks, please wait...</p>
+        <p className="loading-message" style={{ marginTop: '1rem', fontStyle: 'italic', color: '#666' }}>
+          ⏳ Loading tasks, please wait...
+        </p>
       ) : (
         <div className="task-list" style={{ marginTop: '1rem' }}>
-          {filteredTasks.map(task => (
-            <TaskCard
-              key={task._id}
-              task={task}
-              onEdit={() => navigate(`/edit/${task._id}`)}
-              onDelete={() => handleDelete(task._id)}
-            />
-          ))}
+          {filteredTasks.length > 0 ? (
+            filteredTasks.map(task => (
+              <TaskCard
+                key={task._id}
+                task={task}
+                onEdit={() => navigate(`/edit/${task._id}`)}
+                onDelete={() => handleDelete(task._id)}
+              />
+            ))
+          ) : (
+            <p style={{ color: '#999' }}>No tasks found for selected filter.</p>
+          )}
         </div>
       )}
     </div>
