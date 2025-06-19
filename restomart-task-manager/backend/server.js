@@ -4,14 +4,17 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 5173;
+const PORT = process.env.PORT;
 
-// Middleware
 app.use(cors({
-  origin: ['https://restomartprithivi.netlify.app'],
+  origin: [
+    'http://localhost:5173',
+    'https://restomartprithivi.netlify.app'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+
 app.use(express.json());
 
 // MongoDB Connection
